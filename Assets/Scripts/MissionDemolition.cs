@@ -53,6 +53,13 @@ public class MissionDemolition : MonoBehaviour
             Destroy(pTemp);
         }
 
+        // Destroy broken pieces
+        GameObject[] bps = GameObject.FindGameObjectsWithTag("BrokenPiece");
+        foreach(GameObject bpTemp in bps)
+        {
+            Destroy(bpTemp);
+        }
+
         // Instantiate the new castle
         castle = Instantiate<GameObject>(castles[level]);
         castle.transform.position = castlePos;
