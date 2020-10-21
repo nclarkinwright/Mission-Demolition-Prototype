@@ -30,35 +30,15 @@ public class MissionDemolition : MonoBehaviour
     public GameMode mode = GameMode.idle;
     public string showing = "Show Slingshot";
 
-    private int?[] lowestShots;
-
-    private void Awake()
-    {
-        // Test for player prefs
-        PlayerPrefs.SetString("Test", "It Works");
-        
-        level = 0;
-        levelMax = castles.Length;
-
-        lowestShots = new int?[levelMax];
-        string key;
-        for (int i = 0; i < levelMax; i++)
-        {
-            key = "LowestShots_" + i;
-            if (PlayerPrefs.HasKey(key))
-            {
-                lowestShots[i] = PlayerPrefs.GetInt(key);
-            }
-            else
-            {
-                lowestShots[i] = null;
-            }
-        }
-    }
+    private int? lowestShot;
 
     private void Start()
     {
         S = this;
+
+        level = 0;
+        levelMax = castles.Length;
+
         StartLevel();
     }
 
@@ -95,6 +75,16 @@ public class MissionDemolition : MonoBehaviour
         // Reset the goal
         Goal.goalMet = false;
 
+        // Get the best score
+        if(PlayerPrefs.HasKey("LowestShot_" + level))
+        {
+            lowestShot = PlayerPrefs.GetInt("LowestShot_" + level);
+        }
+        else
+        {
+            lowestShot = null;
+        }
+
         UpdateGUI();
 
         mode = GameMode.playing;
@@ -105,32 +95,33 @@ public class MissionDemolition : MonoBehaviour
         // Show the data in the GUITexts
         uitLevel.text = "Level: " + (level + 1) + " of " + levelMax;
         uitShots.text = "Shots Taken: " + shotsTaken;
-    }
 
-    private void OnGUI()
-    {
-        if (lowestShots[level] != null)
+        if (lowestShot != null)
         {
-            uitLowestShots.text = "Lowest Shots: " + lowestShots[level];
+            uitLowestShots.text = "Lowest Shots: " + lowestShot;
+        }
+        else
+        {
+            uitLowestShots.text = "Lowest Shots: N/A";
         }
     }
-
     private void Update()
     {
         UpdateGUI();
 
         // Check for level end
-        if((mode == GameMode.playing) && Goal.goalMet)
+        if ((mode == GameMode.playing) && Goal.goalMet)
         {
+            if(shotsTaken < lowestShot || lowestShot == null)
+            {
+                lowestShot = shotsTaken;
+                PlayerPrefs.SetInt("LowestShot_" + level, (int)lowestShot);
+            }
+            
+            Debug.Log(PlayerPrefs.GetInt("LowestShot_" + level).ToString());
+            
             // Change mode to stop checking for level end
             mode = GameMode.levelEnd;
-            // Save "high" score
-            string key = "LowestShots_" + level;
-            if (shotsTaken < lowestShots[level] && lowestShots != null)
-            {
-                lowestShots[level] = shotsTaken;
-                PlayerPrefs.SetInt(key, shotsTaken);
-            }
             // Zoom out
             SwitchView("Show Both");
             // Start the next level in 3 seconds
@@ -139,7 +130,7 @@ public class MissionDemolition : MonoBehaviour
     }
 
     void NextLevel()
-    {
+    { 
         level++;
         if(level == levelMax)
         {
