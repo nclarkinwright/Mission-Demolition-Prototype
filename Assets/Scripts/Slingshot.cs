@@ -17,6 +17,7 @@ public class Slingshot : MonoBehaviour
     public bool aimingMode;
 
     private Rigidbody projectileRigidbody;
+    private TrailRenderer trail;
 
     static public Vector3 LAUNCH_POS
     {
@@ -87,13 +88,16 @@ public class Slingshot : MonoBehaviour
         if(Input.GetMouseButtonUp(0))
         {
             // The mouse has been released
+            // Enable TrailRenderer of Projectile
+            trail = projectile.GetComponent<TrailRenderer>();
+            trail.emitting = true;
+            
             aimingMode = false;
             projectileRigidbody.isKinematic = false;
             projectileRigidbody.velocity = -mouseDelta * velocityMultiplier;
             FollowCam.POI = projectile;
             projectile = null;
             MissionDemolition.ShotFired();
-            ProjectileLine.S.poi = projectile;
         }
     }
 }
