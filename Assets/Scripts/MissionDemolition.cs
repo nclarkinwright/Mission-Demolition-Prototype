@@ -17,6 +17,7 @@ public class MissionDemolition : MonoBehaviour
     [Header("Set in Inspector")]
     public Text uitLevel;
     public Text uitShots;
+    public Text uitLowestShots;
     public Text uitButton;
     public Vector3 castlePos;
     public GameObject[] castles;
@@ -29,12 +30,35 @@ public class MissionDemolition : MonoBehaviour
     public GameMode mode = GameMode.idle;
     public string showing = "Show Slingshot";
 
+    private int?[] lowestShots;
+
+    private void Awake()
+    {
+        // Test for player prefs
+        PlayerPrefs.SetString("Test", "It Works");
+        
+        level = 0;
+        levelMax = castles.Length;
+
+        lowestShots = new int?[levelMax];
+        string key;
+        for (int i = 0; i < levelMax; i++)
+        {
+            key = "LowestShots_" + i;
+            if (PlayerPrefs.HasKey(key))
+            {
+                lowestShots[i] = PlayerPrefs.GetInt(key);
+            }
+            else
+            {
+                lowestShots[i] = null;
+            }
+        }
+    }
+
     private void Start()
     {
         S = this;
-
-        level = 0;
-        levelMax = castles.Length;
         StartLevel();
     }
 
@@ -59,7 +83,7 @@ public class MissionDemolition : MonoBehaviour
         {
             Destroy(bpTemp);
         }
-
+        
         // Instantiate the new castle
         castle = Instantiate<GameObject>(castles[level]);
         castle.transform.position = castlePos;
@@ -83,6 +107,14 @@ public class MissionDemolition : MonoBehaviour
         uitShots.text = "Shots Taken: " + shotsTaken;
     }
 
+    private void OnGUI()
+    {
+        if (lowestShots[level] != null)
+        {
+            uitLowestShots.text = "Lowest Shots: " + lowestShots[level];
+        }
+    }
+
     private void Update()
     {
         UpdateGUI();
@@ -92,6 +124,13 @@ public class MissionDemolition : MonoBehaviour
         {
             // Change mode to stop checking for level end
             mode = GameMode.levelEnd;
+            // Save "high" score
+            string key = "LowestShots_" + level;
+            if (shotsTaken < lowestShots[level] && lowestShots != null)
+            {
+                lowestShots[level] = shotsTaken;
+                PlayerPrefs.SetInt(key, shotsTaken);
+            }
             // Zoom out
             SwitchView("Show Both");
             // Start the next level in 3 seconds
